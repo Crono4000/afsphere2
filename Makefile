@@ -1,4 +1,4 @@
 
 
 server:
-	cc main.c file.c -o main -lpq
+	cc main.c file.c sql.c -o afsphere -lpq
