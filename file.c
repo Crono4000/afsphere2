@@ -55,10 +55,7 @@ int	get_file_length(char *file1, off_t *length)
 	error_code = 0;
 	error_code = stat(file1, &st);
 	if (error_code == -1)
-	{
-		perror("Error calling stat: ");
-		error_code = 5;
-	}
+		return (5);
 	*length = st.st_size;
 	return (error_code);
 }

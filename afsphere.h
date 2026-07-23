@@ -22,5 +22,6 @@ int		add_disk_db(PGconn *conn, char* disk, char	*limit, char *priority);
 int		move_file_to_db(PGconn *conn, char* file, char* file_id);
 int		add_file_db(PGconn *conn, char* file);
 int		exec_file_db(PGconn *conn, char* file);
+int		show_query_db(PGconn *conn, char *query);
 
 #endif

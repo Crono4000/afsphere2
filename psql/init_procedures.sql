@@ -1,5 +1,5 @@
 
-CREATE OR REPLACE PROCEDURE insert_file(ficheiro_nome TEXT, siz BIGINT)
+CREATE OR REPLACE PROCEDURE insert_file(ficheiro_nome TEXT, siz BIGINT, OUT file_ud INT)
 LANGUAGE plpgsql
 AS $$
 DECLARE
