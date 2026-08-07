@@ -22,11 +22,13 @@ void	print_error(int error_code, PGconn	*conn)
 		printf("Connecting to psql %s\n", PQerrorMessage(conn));
 	if (error_code == 9)
 		printf("Invalid syntax: %s\n", "The first argument from add_disk needs to be a whole path starting from the root /");
+	if (error_code == 10)
+		printf("Error starting the server.\n");
 }
 
 int main(int argc, char **argv)
 {
-    PGconn	*conn;
+	PGconn	*conn;
 	char	*printable;
 	long	lprintable;
 	int		error_code;
@@ -46,6 +48,8 @@ int main(int argc, char **argv)
 		else if (argc == 3 && strcmp(argv[1], "add_file") == 0)
 			error_code = add_file_db(conn, argv[2]);
 		else if (argc == 4 && strcmp(argv[1], "copy") == 0)
+			error_code = copy_file(argv[2], argv[3]);
+		else if (argc == 4 && strcmp(argv[1], "start_server") == 0)
 			error_code = copy_file(argv[2], argv[3]);
 		else if (argc == 3 && strcmp(argv[1], "show_query") == 0)
 			error_code = show_query_db(conn, argv[2]);

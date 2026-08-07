@@ -5,12 +5,18 @@
 # include <stdio.h>
 # include <sys/stat.h>
 # include <postgresql/libpq-fe.h>
+# include <microhttpd.h>
 # include <string.h>
 # include <unistd.h>
 # include <fcntl.h>
 # include <stdlib.h>
+# include <signal.h>
+# include <sys/wait.h>
 
-# define CPY_BUFFER 50
+typedef struct apc_config_s
+{
+	char	*user_name;
+}			apc_config_t
 
 int		get_file_length(char *file1, off_t *length);
 int		copy_file(char *file1, char *file2);
