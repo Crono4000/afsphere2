@@ -60,6 +60,47 @@ int	get_file_length(char *file1, off_t *length)
 	return (error_code);
 }
 
+int split_join(char **split, int size, char between, char final1, char final2, char **result)
+{
+	int		sizee;
+	int		size2;
+	int		i;
+	int		ii;
+	int		iii;
+	char	*reallo;
+
+	i = 0;
+	ii = 1;
+	sizee = 1;
+	*result = malloc(sizeof(char) * sizee);
+	if (*result == NULL)
+		return (4);
+	result[0][0] = final1;
+	while (i < size)
+	{
+		size2 = strlen(split[i]);
+		sizee += size2 + 1;
+		reallo = realloc(*result, sizee * sizeof(char));
+		if (!reallo)
+			return (free(*result), *result = NULL, 4);
+		*result = reallo;
+		iii = 0;
+		while (iii < size2)
+		{
+			result[0][ii] = split[i][iii];
+			iii++;
+			ii++;
+		}
+		i++;
+		if (i != size)
+			result[0][ii] = between;
+		else
+			result[0][ii] = final2;
+		ii++;
+	}
+	return (0);
+}
+
 int	copy_file(char *file1, char *file2)
 {
 	char	buffer[CPY_BUFFER];

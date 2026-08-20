@@ -23,14 +23,17 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION get_file_path(filenname TEXT)
-RETURNS TEXT
+CREATE OR REPLACE FUNCTION search_infos_by_tags(tags TEXT[])
+RETURNS TABLE (id INTEGER, title TEXT)
 LANGUAGE plpgsql
 AS $$
-DECLARE
-  result TEXT DEFAULT NULL;
 BEGIN
-  SELECT file_path INTO result FROM file WHERE file_name = filenname AND active = TRUE LIMIT 1;
-  RETURN result;
+  	SELECT i.info_id, i.
+	FROM info AS i
+	JOIN info_tag AS it ON it.info_id = i.info_id
+	JOIN tag AS t ON t.tag_name = it.tag_id
+	WHERE t.tag_name = ANY(tags)
+	GROUP BY i.info_id
+	HAVING COUNT(DISTINCT t.tag_name) = cardinality(tags);
 END;
 $$;

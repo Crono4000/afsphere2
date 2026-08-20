@@ -17,6 +17,20 @@ int	exec_file_db(PGconn *conn, char* file)
 	return (return_code);
 }
 
+int	format_db(PGconn *conn)
+{
+	int	return_code;
+
+	return_code = exec_file_db(conn, "psql/delete_all.sql");
+	if (return_code)
+		return (return_code);
+	return_code = exec_file_db(conn, "psql/init_tables.sql");
+	if (return_code)
+		return (return_code);
+	return_code = exec_file_db(conn, "psql/init_procedures.sql");
+	return return_code;
+}
+
 int	add_disk_db(PGconn *conn, char* disk, char	*limit, char *priority)
 {
 	char		**params;
@@ -117,5 +131,79 @@ int	add_file_db(PGconn *conn, char* file)
 		return_code = move_file_to_db(conn, file, file_id);
 	}
 	PQclear(res);
+	return (return_code);
+}
+
+/*int	search_info_db(PGconn *conn, char *info_id, char **tags, int size)
+{
+
+}*/
+
+int	add_info_tag_db(PGconn *conn, char *info_id, char *tag)
+{
+	char		**params;
+	PGresult	*res;
+	int			return_code;
+
+	params = malloc(sizeof(char *) * 2);
+	if (params == NULL)
+		return (4);
+	params[0] = tag;
+	params[1] = info_id;
+	res = PQexecParams(conn, "CALL insert_info_tag($1, $2);", 2, NULL, (const char *const*)params, NULL, NULL, 0);
+	return_code = PQresultStatus(res) == PGRES_COMMAND_OK ? 0 : 7;
+	free(params);
+	return return_code;
+}
+
+int add_info_tags_db(PGconn *conn, char *info_id, char **tags, int size)
+{
+	int	ii;
+	int	return_code;
+
+	return_code = 0;
+	ii = 0;
+	while (ii < size)
+	{
+		return_code = add_info_tag_db(conn, info_id, tags[ii]);
+		if (return_code)
+			break;
+		ii++;
+	}
+	return return_code;
+}
+
+int	add_content_db(PGconn *conn, char *title, char* content, char **tags, int size)
+{
+	int		return_code;
+	char	*cont_id;
+
+	return_code = add_info_bytea_db(conn, title, (void *) content, (long) strlen(content), "FALSE", &cont_id);
+	if (!return_code)
+		add_info_tags_db(conn, cont_id, tags, size);
+	return (return_code);
+}
+
+int	add_info_bytea_db(PGconn *conn, char *title, void* content, long size, char *is_file, char **file_id)
+{
+	char		**params;
+	PGresult	*res;
+	int			return_code;
+	const int	paramFormats[] = {0, 1, 0, 0};
+	const int	paramLengths[] = {0, (int)size, 0, 0};
+
+	params = malloc(sizeof(char *) * 4);
+	if (params == NULL)
+		return (4);
+	params[0] = title;
+	params[1] = content;
+	params[2] = ltoa(size);
+	params[3] = is_file;
+	res = PQexecParams(conn, "CALL insert_info_bytea($1, $2, $3, $4, NULL);", 4, NULL, (const char *const*)params, paramLengths, paramFormats, 0);
+	return_code = PQresultStatus(res) == PGRES_TUPLES_OK ? 0 : 7;
+	free(params[2]);
+	free(params);
+	if(return_code == 0 && file_id)
+		*file_id = PQgetvalue(res, 0, 0);
 	return (return_code);
 }

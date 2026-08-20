@@ -23,7 +23,11 @@ void	print_error(int error_code, PGconn	*conn)
 	if (error_code == 9)
 		printf("Invalid syntax: %s\n", "The first argument from add_disk needs to be a whole path starting from the root /");
 	if (error_code == 10)
-		printf("Error starting the server.\n");
+		perror("Error starting the server.\n");
+	if (error_code == 11)
+		perror("Error forking the server.\n");
+	if (error_code == 12)
+		printf("You need to be root to execute this command.\n");
 }
 
 int main(int argc, char **argv)
@@ -49,10 +53,33 @@ int main(int argc, char **argv)
 			error_code = add_file_db(conn, argv[2]);
 		else if (argc == 4 && strcmp(argv[1], "copy") == 0)
 			error_code = copy_file(argv[2], argv[3]);
-		else if (argc == 4 && strcmp(argv[1], "start_server") == 0)
-			error_code = copy_file(argv[2], argv[3]);
+		else if (argc >= 4 && strcmp(argv[1], "add_content") == 0)
+			error_code = add_content_db(conn, argv[1], argv[2], argv + 3, argc - 4);
+		else if (argc == 2 && strcmp(argv[1], "format") == 0)
+		{
+			if (geteuid() == 0)
+				error_code = format_db(conn);
+			else
+				error_code = 12;
+		}
+		else if (argc == 2 && strcmp(argv[1], "start_server") == 0)
+		{
+			if (geteuid() == 0)
+				error_code = start_server(conn);
+			else
+				error_code = 12;
+		}
+		else if (argc == 2 && strcmp(argv[1], "end_server") == 0)
+		{
+			if (geteuid() == 0)
+				error_code = stop_server();
+			else
+				error_code = 12;
+		}
 		else if (argc == 3 && strcmp(argv[1], "show_query") == 0)
 			error_code = show_query_db(conn, argv[2]);
+		else if (argc >= 2 && strcmp(argv[1], "test_split_join") == 0)
+			error_code = split_join(argv + 2, argc - 2, ',', '{', '}', &printable);
 		else if (argc == 3 && strcmp(argv[1], "test_get_file_name") == 0)
 			printf("filename:%s\n", get_file_name(argv[2]));
 		else if (argc == 3 && strcmp(argv[1], "test_file_length") == 0)
