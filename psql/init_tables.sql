@@ -18,17 +18,17 @@ CREATE TABLE IF NOT EXISTS tag (
 );
 
 CREATE TABLE IF NOT EXISTS info_tag (
-    tag_id TEXT,
+    tag_name TEXT,
     info_id INTEGER,
 
-    PRIMARY KEY (tag_id, info_id),
-    UNIQUE (tag_id, info_id),
+    PRIMARY KEY (tag_name, info_id),
+    UNIQUE (tag_name, info_id),
 
     FOREIGN KEY (info_id)
     REFERENCES info(info_id)
     ON DELETE CASCADE,
 
-    FOREIGN KEY (tag_id)
+    FOREIGN KEY (tag_name)
     REFERENCES tag(tag_name)
     ON DELETE CASCADE
 );

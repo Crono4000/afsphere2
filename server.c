@@ -3,6 +3,26 @@
 
 static app_t *app;
 
+int queue_pipe_response(struct MHD_Connection *connection, int **pipe_fds)
+{
+    struct MHD_Response *response;
+    enum MHD_Result     result;
+
+    response = MHD_create_response_from_pipe((*pipe_fds)[0]);
+    if (response == NULL)
+        return MHD_NO;
+    result = MHD_queue_response(connection, MHD_HTTP_OK, response);
+    MHD_destroy_response(response);
+    if (result != MHD_YES)
+    {
+        close((*pipe_fds)[1]);
+        free(*pipe_fds);
+        *pipe_fds = NULL;
+        return MHD_NO;
+    }
+    return MHD_YES;
+}
+
 static enum MHD_Result check_client(void *cls, const struct sockaddr *addr, socklen_t addrlen)
 {
     printf("Alguem esta a tentar ligar\n");

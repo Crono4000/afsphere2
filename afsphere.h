@@ -5,6 +5,7 @@
 # include <stdio.h>
 # include <sys/stat.h>
 # include <postgresql/libpq-fe.h>
+# include <postgresql/libpq/libpq-fs.h>
 # include <microhttpd.h>
 # include <string.h>
 # include <unistd.h>
@@ -15,7 +16,20 @@
 # include <sys/wait.h>
 
 # define CPY_BUFFER 50
-# define BYTEA_LIMIT 2000000
+# define BYTEA_LIMIT 5000000
+
+# define FLAG_ISBYTEA 1
+# define FLAG_ISFILE 2
+
+typedef struct info_s
+{
+	char			*file_id;
+	char			*title;
+	unsigned char	*bytea;
+	Oid				oid;
+	long			size;
+	short			flags;
+}					info_t;
 
 typedef struct app_s
 {
@@ -30,8 +44,7 @@ char	*get_file_name(char	*path);
 int		get_file_content(char **content, char *file);
 int		split_join(char **split, int size, char between, char final1, char final2, char **result);
 
-int		add_disk_db(PGconn *conn, char* disk, char	*limit, char *priority);
-int		move_file_to_db(PGconn *conn, char* file, char* file_id);
+int		search_info_db(PGconn *conn, char **tags, int size);
 int		add_file_db(PGconn *conn, char* file);
 int		exec_file_db(PGconn *conn, char* file);
 int		show_query_db(PGconn *conn, char *query);
@@ -40,6 +53,8 @@ int		format_db(PGconn *conn);
 int		add_content_db(PGconn *conn, char *title, char* content, char **tags, int size);
 int 	add_info_tags_db(PGconn *conn, char *info_id, char **tags, int size);
 int		add_info_tag_db(PGconn *conn, char *info_id, char *tag);
+int		show_info_db(PGconn *conn, char *file_id);
+int		put_info_into_file_db(PGconn *conn, char *file_id);
 
 int		stop_server();
 int		start_server(PGconn	*conn);

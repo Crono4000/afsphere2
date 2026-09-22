@@ -71,7 +71,7 @@ int split_join(char **split, int size, char between, char final1, char final2, c
 
 	i = 0;
 	ii = 1;
-	sizee = 1;
+	sizee = 3;
 	*result = malloc(sizeof(char) * sizee);
 	if (*result == NULL)
 		return (4);
@@ -93,11 +93,11 @@ int split_join(char **split, int size, char between, char final1, char final2, c
 		}
 		i++;
 		if (i != size)
-			result[0][ii] = between;
-		else
-			result[0][ii] = final2;
-		ii++;
+			result[0][ii++] = between;
 	}
+	result[0][ii] = final2;
+	ii++;
+	result[0][ii] = '\0';
 	return (0);
 }
 
@@ -131,6 +131,8 @@ int	copy_file(char *file1, char *file2)
 		if (write_return == -1)
 			return (close(fd1), close(fd2), 1);
 	}
+	close(fd1);
+	close(fd2);
 	return (0);
 }
 
@@ -138,11 +140,9 @@ int	get_file_content(char **content, char *file)
 {
 	int		fd;
 	long	size;
-	int		content_indice;
 	int		bytes_read;
 	int		error_code;
 
-	content_indice = 0;
 	error_code = get_file_length(file, (off_t *) &size);
 	if (error_code)
 		return (error_code);
@@ -152,17 +152,10 @@ int	get_file_content(char **content, char *file)
 	fd = open(file, O_RDONLY);
 	if (fd == -1)
 		return (free(*content), *content = NULL, 3);
-	bytes_read = read(fd, *content + content_indice, CPY_BUFFER);
-	while (bytes_read == CPY_BUFFER)
-	{
-		content_indice += bytes_read;
-		bytes_read = read(fd, *content + content_indice, CPY_BUFFER);
-	}
+	bytes_read = read(fd, *content, size);
 	if (bytes_read == -1)
 		return (close(fd), free(*content), *content = NULL, 2);
-	if (bytes_read > 0)
-		content_indice += bytes_read;
-	(*content)[content_indice] = '\0';
+	(*content)[size] = '\0';
 	close(fd);
 	return (0);
 }
