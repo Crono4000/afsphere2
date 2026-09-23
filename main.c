@@ -30,6 +30,12 @@ void	print_error(int error_code, PGconn	*conn)
 		printf("You need to be root to execute this command.\n");
 	if (error_code == 13)
 		printf("The length file was higher than the malloc limit.\n");
+	if (error_code == 14)
+		printf("A function from microhttplib returned MHD_NO\n");
+	if (error_code == 15)
+		perror("Error on pipe");
+	if (error_code == 16)
+		perror("Error initializing a response in microhttplolib");
 }
 
 int main(int argc, char **argv)

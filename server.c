@@ -3,14 +3,16 @@
 
 static app_t *app;
 
-enum MHD_Result queue_pipe_response(struct MHD_Connection *connection, int **pipe_fds)
+int	queue_pipe_response(struct MHD_Connection *connection, int **pipe_fds)
 {
     struct MHD_Response *response;
     enum MHD_Result     result;
 
+	if (pipe(*pipe_fds) == -1)
+		return (15);
     response = MHD_create_response_from_pipe((*pipe_fds)[0]);
     if (response == NULL)
-        return MHD_NO;
+        return (16);
     result = MHD_queue_response(connection, MHD_HTTP_OK, response);
     MHD_destroy_response(response);
     if (result != MHD_YES)
@@ -18,20 +20,22 @@ enum MHD_Result queue_pipe_response(struct MHD_Connection *connection, int **pip
         close((*pipe_fds)[1]);
         free(*pipe_fds);
         *pipe_fds = NULL;
-        return MHD_NO;
+        return (14);
     }
-    return MHD_YES;
+    return 0;
 }
 
-enum MHD_Result queue_page_sql(struct MHD_Connection *connection, int fd, char *file, char *template, char *query, char **args, int size)
+int queue_page_sql(struct MHD_Connection *connection, char *file, char *template, char *query, char **args, int size)
 {
 	int					pipe[2];
 	enum MHD_Result     result;
+	int					error_code;
 
-	result = queue_pipe_response(connection, &pipe);
-	if (result == MHD_NO)
-		return (MHD_NO);
-	render_page_sql(conn, pipe[1], file, template, query, args, size);
+	error_code = queue_pipe_response(connection, &pipe);
+	if (error_code)
+		return (error_code);
+	error_code = render_page_sql(conn, pipe[1], file, template, query, args, size);
+	return error_code;
 }
 
 static enum MHD_Result check_client(void *cls, const struct sockaddr *addr, socklen_t addrlen)
@@ -42,15 +46,19 @@ static enum MHD_Result check_client(void *cls, const struct sockaddr *addr, sock
 
 static enum MHD_Result handle_request(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **req_cls)
 {
-    struct MHD_Response	*response;
-	enum MHD_Result		result;
-	int					*pipe;
+    int		error_code;
+	char	*search;
+	char	*isfile;
+	char	*page;
 
-	response = MHD_create_response_from_buffer(strlen(body), (void*)body, MHD_RESPMEM_PERSISTENT);
-	if (response == NULL)
-		return MHD_NO;
-	result = MHD_queue_response(connection, MHD_HTTP_OK, response);
-	return result;
+	search = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "search");
+	isfile = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "isfile");
+	page = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "page");
+	if (strcmp(url, "/search_infos") == 0 && isfile != NULL && search != NULL && page != NULL && (strcmp(isfile, "true") == 0 || strcmp(isfile, "false") == 0))
+		error_code = queue_page_sql(connection, fd, file, template, query, str_array(3, search, isfile, page), 3);
+	if (error_code)
+		return (MHD_NO);
+	return (MHD_YES);
 }
 
 void finish_process(int signal)
