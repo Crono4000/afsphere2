@@ -159,3 +159,23 @@ int	get_file_content(char **content, char *file)
 	close(fd);
 	return (0);
 }
+
+char	**str_array(int size, ...)
+{
+	va_list	ap;
+	char	**result;
+	int		index;
+
+	result = malloc(sizeof(char *) * size);
+	if (!result)
+		return (NULL);
+	va_start(ap, size);
+	index = 0;
+	while (index < size)
+	{
+		result[index] = va_arg(ap, char*);
+		index++;
+	}
+	va_end(ap);
+	return (result);
+}

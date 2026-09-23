@@ -3,7 +3,7 @@
 
 static app_t *app;
 
-int queue_pipe_response(struct MHD_Connection *connection, int **pipe_fds)
+enum MHD_Result queue_pipe_response(struct MHD_Connection *connection, int **pipe_fds)
 {
     struct MHD_Response *response;
     enum MHD_Result     result;
@@ -23,6 +23,17 @@ int queue_pipe_response(struct MHD_Connection *connection, int **pipe_fds)
     return MHD_YES;
 }
 
+enum MHD_Result queue_page_sql(struct MHD_Connection *connection, int fd, char *file, char *template, char *query, char **args, int size)
+{
+	int					pipe[2];
+	enum MHD_Result     result;
+
+	result = queue_pipe_response(connection, &pipe);
+	if (result == MHD_NO)
+		return (MHD_NO);
+	render_page_sql(conn, pipe[1], file, template, query, args, size);
+}
+
 static enum MHD_Result check_client(void *cls, const struct sockaddr *addr, socklen_t addrlen)
 {
     printf("Alguem esta a tentar ligar\n");
@@ -33,9 +44,8 @@ static enum MHD_Result handle_request(void *cls, struct MHD_Connection *connecti
 {
     struct MHD_Response	*response;
 	enum MHD_Result		result;
-	char				*body;
+	int					*pipe;
 
-	body = "Ola o website esta on.";
 	response = MHD_create_response_from_buffer(strlen(body), (void*)body, MHD_RESPMEM_PERSISTENT);
 	if (response == NULL)
 		return MHD_NO;

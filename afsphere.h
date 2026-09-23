@@ -8,6 +8,7 @@
 # include <postgresql/libpq/libpq-fs.h>
 # include <microhttpd.h>
 # include <string.h>
+# include <stdarg.h>
 # include <unistd.h>
 # include <signal.h>
 # include <fcntl.h>
@@ -37,12 +38,15 @@ typedef struct app_s
 	struct MHD_Daemon	*daemon;
 }						app_t;
 
+int		render_page_sql(PGconn *conn, int fd, char *file, char *template, char *query, char **args, int size);
+
 int		get_file_length(char *file1, off_t *length);
 int		copy_file(char *file1, char *file2);
 char	*ltoa(unsigned long	n);
 char	*get_file_name(char	*path);
 int		get_file_content(char **content, char *file);
 int		split_join(char **split, int size, char between, char final1, char final2, char **result);
+char	**str_array(int size, ...);
 
 int		search_info_db(PGconn *conn, char **tags, int size);
 int		add_file_db(PGconn *conn, char* file);

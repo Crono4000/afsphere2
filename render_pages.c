@@ -47,10 +47,9 @@ void	write_pgresult(PGresult *result, char *template, int fd)
 		row++;
 	}
     free(values);
-    close(fd);
 }
 
-int	write_page_with_result(PGconn *conn, int fd, char *file, PGresult *result, char *template)
+int	write_page_with_result(int fd, char *file, PGresult *result, char *template)
 {
 	char	read_buffer[CPY_BUFFER + 1];
 	int		read_fd;
@@ -69,7 +68,7 @@ int	write_page_with_result(PGconn *conn, int fd, char *file, PGresult *result, c
 		{
 			if (read_buffer[read_index] == '$' && read_buffer[read_index + 1] == '$')
 			{
-				write_pgresult(result, template, );
+				write_pgresult(result, template, fd);
 				read_index++;
 			}
 			else
@@ -79,6 +78,17 @@ int	write_page_with_result(PGconn *conn, int fd, char *file, PGresult *result, c
 		read_bytes = read(read_fd, read_buffer, CPY_BUFFER);
 		read_buffer[read_bytes] = '\0';
 	}
+	close(fd);
 }
 
+int	render_page_sql(PGconn *conn, int fd, char *file, char *template, char *query, char **args, int size)
+{
+	PGresult	*res;
+	int			return_code;
 
+	res = PQexecParams(conn, query, size, NULL, args, NULL, NULL, 0);
+	return_code = PQresultStatus(res) == PGRES_TUPLES_OK ? 0 : 7;
+	if (return_code == 0)
+		return_code = write_page_with_result(fd, file, res, template);
+	return (return_code);
+}
