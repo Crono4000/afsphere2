@@ -86,7 +86,7 @@ int	render_page_sql(PGconn *conn, int fd, char *file, char *template, char *quer
 	PGresult	*res;
 	int			return_code;
 
-	res = PQexecParams(conn, query, size, NULL, args, NULL, NULL, 0);
+	res = PQexecParams(conn, query, size, NULL, (const char *const *)args, NULL, NULL, 0);
 	return_code = PQresultStatus(res) == PGRES_TUPLES_OK ? 0 : 7;
 	if (return_code == 0)
 		return_code = write_page_with_result(fd, file, res, template);

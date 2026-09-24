@@ -44,3 +44,29 @@ BEGIN
 	END IF;
 END;
 $$;
+
+CREATE OR REPLACE FUNCTION search_infos_by_tags_webpage(tags TEXT[], page INTEGER, isfile BOOLEAN)
+RETURNS TABLE (id INTEGER, title TEXT, is_bytea BOOLEAN)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+	IF cardinality(tags) = 0 THEN
+		RETURN QUERY
+		SELECT i.info_id, i.title, i.is_bytea
+		FROM info AS i
+        LIMIT 32
+        OFFSET 32 * page;
+	ELSE
+		RETURN QUERY
+		SELECT i.info_id, i.title, i.is_bytea
+		FROM info AS i
+		JOIN info_tag AS it ON it.info_id = i.info_id
+		JOIN tag AS t ON t.tag_name = it.tag_name
+		WHERE t.tag_name = ANY(tags)
+		GROUP BY i.info_id
+		HAVING COUNT(DISTINCT t.tag_name) = cardinality(tags)
+        LIMIT 32
+        OFFSET 32 * page;
+	END IF;
+END;
+$$;

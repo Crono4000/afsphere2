@@ -31,11 +31,11 @@ int queue_page_sql(struct MHD_Connection *connection, char *file, char *template
 	enum MHD_Result     result;
 	int					error_code;
 
-	error_code = queue_pipe_response(connection, &pipe);
+	error_code = queue_pipe_response(connection, (int **)&pipe);
 	if (error_code)
 		return (error_code);
-	error_code = render_page_sql(conn, pipe[1], file, template, query, args, size);
-	return error_code;
+	error_code = render_page_sql(app->conn, pipe[1], file, template, query, args, size);
+	return (error_code);
 }
 
 static enum MHD_Result check_client(void *cls, const struct sockaddr *addr, socklen_t addrlen)
@@ -55,7 +55,7 @@ static enum MHD_Result handle_request(void *cls, struct MHD_Connection *connecti
 	isfile = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "isfile");
 	page = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "page");
 	if (strcmp(url, "/search_infos") == 0 && isfile != NULL && search != NULL && page != NULL && (strcmp(isfile, "true") == 0 || strcmp(isfile, "false") == 0))
-		error_code = queue_page_sql(connection, fd, file, template, query, str_array(3, search, isfile, page), 3);
+		error_code = queue_page_sql(connection, "html/search_infos.html", "<tr><td>$1</td><td>$2</td></tr>", "search_infos_by_tags_webpage($1, $2, $3);", str_array(3, search, page, isfile), 3);
 	if (error_code)
 		return (MHD_NO);
 	return (MHD_YES);
